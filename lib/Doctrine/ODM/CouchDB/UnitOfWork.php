@@ -159,6 +159,30 @@ class UnitOfWork
 
         $id = $data['_id'];
         $rev = $data['_rev'];
+
+        if (isset($this->identityMap[$id])) {
+            $document = $this->identityMap[$id];
+            $overrideLocalValues = false;
+
+            if ( ($document instanceof Proxy && !$document->__isInitialized__) || isset($hints['refresh'])) {
+                $overrideLocalValues = true;
+                $oid = spl_object_hash($document);
+            } else {
+                return $document;
+            }
+        } else {
+            $document = $class->newInstance();
+            $this->identityMap[$id] = $document;
+
+            $oid = spl_object_hash($document);
+            $this->documentState[$oid] = self::STATE_MANAGED;
+            $this->documentIdentifiers[$oid] = $id;
+            $this->documentRevisions[$oid] = $rev;
+            $overrideLocalValues = true;
+        }
+
+
+
         $conflict = false;
         foreach ($data as $jsonName => $jsonValue) {
             if (isset($class->jsonNames[$jsonName])) {
@@ -210,25 +234,6 @@ class UnitOfWork
                     $class->associationsMappings[$assocName]['mappedBy']
                 );
             }
-        }
-
-        if (isset($this->identityMap[$id])) {
-            $document = $this->identityMap[$id];
-            $overrideLocalValues = false;
-
-            if ( ($document instanceof Proxy && !$document->__isInitialized__) || isset($hints['refresh'])) {
-                $overrideLocalValues = true;
-                $oid = spl_object_hash($document);
-            }
-        } else {
-            $document = $class->newInstance();
-            $this->identityMap[$id] = $document;
-
-            $oid = spl_object_hash($document);
-            $this->documentState[$oid] = self::STATE_MANAGED;
-            $this->documentIdentifiers[$oid] = $id;
-            $this->documentRevisions[$oid] = $rev;
-            $overrideLocalValues = true;
         }
 
         if ($documentName && !($document instanceof $documentName)) {
