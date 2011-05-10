@@ -57,7 +57,7 @@ class EmbeddedDocumentSerializer
             return null;
         }
 
-        if ('many' == $embeddedFieldMapping['embedded'] && is_array($embeddedValue)) {
+        if ('many' == $embeddedFieldMapping['embedded'] && (is_array($embeddedValue) || $embeddedValue instanceof \Traversable)) {
             $data = array();
             foreach ($embeddedValue as $key => $val) {
                 $data[$key] = $this->serializeEmbeddedDocument($val, $embeddedFieldMapping);

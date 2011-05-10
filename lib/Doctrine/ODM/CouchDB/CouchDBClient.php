@@ -102,9 +102,16 @@ class CouchDBClient
      * @param array $ids
      * @return array
      */
-    public function findDocuments(array $ids)
+    public function findDocuments(array $ids, $limit = null, $offset = null)
     {
         $allDocsPath = '/' . $this->databaseName . '/_all_docs?include_docs=true';
+        if ($limit) {
+            $allDocsPath .= '&limit=' . (int)$limit;
+        }
+        if ($offset) {
+            $allDocsPath .= '&skip=' . (int)$offset;
+        }
+
         return $this->httpClient->request('POST', $allDocsPath, json_encode(array('keys' => $ids)));
     }
 
@@ -308,5 +315,106 @@ class CouchDBClient
             sprintf("/%s/_design/%s", $this->databaseName, $designDocName),
             json_encode($data)
         );
+    }
+
+    /**
+     * GET /db/_compact
+     *
+     * Return array of data about compaction status.
+     *
+     * @return array
+     */
+    public function getCompactInfo()
+    {
+        $path = sprintf('/%s/_compact', $this->databaseName);
+        $response = $this->httpClient->request('GET', $path);
+        if ($response->status >= 400) {
+            throw HTTPException::fromResponse($path, $response);
+        }
+        return $response->body;
+    }
+
+    /**
+     * POST /db/_compact
+     *
+     * @return array
+     */
+    public function compactDatabase()
+    {
+        $path = sprintf('/%s/_compact', $this->databaseName);
+        $response = $this->httpClient->request('POST', $path);
+        if ($response->status >= 400) {
+            throw HTTPException::fromResponse($path, $response);
+        }
+        return $response->body;
+    }
+
+    /**
+     * POST /db/_compact/designDoc
+     *
+     * @param string $designDoc
+     * @return array
+     */
+    public function compactView($designDoc)
+    {
+        $path = sprintf('/%s/_compact/%s', $this->databaseName, $designDoc);
+        $response = $this->httpClient->request('POST', $path);
+        if ($response->status >= 400) {
+            throw HTTPException::fromResponse($path, $response);
+        }
+        return $response->body;
+    }
+
+    /**
+     * POST /db/_view_cleanup
+     *
+     * @return array
+     */
+    public function viewCleanup()
+    {
+        $path = sprintf('/%s/_view_cleanup', $this->databaseName);
+        $response = $this->httpClient->request('POST', $path);
+        if ($response->status >= 400) {
+            throw HTTPException::fromResponse($path, $response);
+        }
+        return $response->body;
+    }
+
+    /**
+     * POST /db/_replicate
+     *
+     * @param string $source
+     * @param string $target
+     * @param bool|null $cancel
+     * @param bool|null $continuous
+     * @param string|null $filter
+     * @param array|null $ids
+     * @param string|null $proxy
+     * @return array
+     */
+    public function replicate($source, $target, $cancel = null, $continuous = null, $filter = null, array $ids = null, $proxy = null)
+    {
+        $params = array('target' => $target, 'source' => $source);
+        if ($cancel !== null) {
+            $params['cancel'] = (bool)$cancel;
+        }
+        if ($continuous !== null) {
+            $params['continuous'] = (bool)$continuous;
+        }
+        if ($filter !== null) {
+            $params['filter'] = $filter;
+        }
+        if ($ids !== null) {
+            $params['doc_ids'] = $ids;
+        }
+        if ($proxy !== null) {
+            $params['proxy'] = $proxy;
+        }
+        $path = '/_replicate';
+        $response = $this->httpClient->request('POST', $path, json_encode($params));
+        if ($response->status >= 400) {
+            throw HTTPException::fromResponse($path, $response);
+        }
+        return $response->body;
     }
 }
