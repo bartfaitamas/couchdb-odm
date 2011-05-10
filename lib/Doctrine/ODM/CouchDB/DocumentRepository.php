@@ -119,8 +119,8 @@ class DocumentRepository implements ObjectRepository
         }
 
         $docs = array();
-        if ($response->body['total_rows'] > 0) {
-            foreach ($response->body['rows'] AS $responseData) {
+        foreach ($response->body['rows'] AS $responseData) {
+            if (isset($responseData['doc'])) {
                 $docs[] = $uow->createDocument($this->documentName, $responseData['doc']);
             }
         }
