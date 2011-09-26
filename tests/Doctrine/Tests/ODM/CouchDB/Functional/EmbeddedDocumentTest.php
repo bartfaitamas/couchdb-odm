@@ -101,18 +101,3 @@ class EmbeddedAssociationTest extends \Doctrine\Tests\ODM\CouchDB\CouchDBFunctio
         $this->assertEquals('Cartagena', $user->address->city);
     }
 }
-
-class PreUpdateSubscriber2 implements EventSubscriber
-{
-    public $eventArgs = array();
-    public function getSubscribedEvents()
-    {
-        return array(\Doctrine\ODM\CouchDB\Event::preUpdate);
-    }
-
-    public function preUpdate(\Doctrine\ODM\CouchDB\Event\LifecycleEventArgs $args)
-    {
-        $this->eventArgs[] = $args;
-    }
-
-}

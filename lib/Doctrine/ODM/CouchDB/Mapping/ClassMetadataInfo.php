@@ -353,7 +353,8 @@ class ClassMetadataInfo implements ClassMetadata
         if ( ! isset($mapping['jsonName'])) {
             $mapping['jsonName'] = $mapping['fieldName'];
         }
-        if (isset($this->fieldMappings[$mapping['fieldName']]) || isset($this->associationsMappings[$mapping['fieldName']])) {
+        if ( (isset($this->fieldMappings[$mapping['fieldName']]) && !isset($this->fieldMappings[$mapping['fieldName']]['declared'])  ) 
+             || (isset($this->associationsMappings[$mapping['fieldName']])) && isset($this->associationsMappings[$mapping['fieldName']]['declared'])) {
             throw MappingException::duplicateFieldMapping($this->name, $mapping['fieldName']);
         }
 
